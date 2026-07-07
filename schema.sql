@@ -41,7 +41,7 @@ ADD COLUMN IF NOT EXISTS user_role VARCHAR(20) NOT NULL DEFAULT 'user';
 
 CREATE TABLE IF NOT EXISTS predictions (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    input_json JSON NOT NULL,
+    input_json LONGTEXT NOT NULL,
     predicted_price DECIMAL(15,2) NOT NULL,
     user_id INT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
