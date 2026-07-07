@@ -1,5 +1,5 @@
-CREATE DATABASE IF NOT EXISTS smart_property_valuer;
-USE smart_property_valuer;
+-- LRGS FTSM UKM: use the faculty-assigned database name
+USE a202336;
 
 CREATE TABLE IF NOT EXISTS users (
     id INT AUTO_INCREMENT PRIMARY KEY,
