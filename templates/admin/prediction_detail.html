@@ -1,0 +1,113 @@
+{% extends "admin/base.html" %}
+
+{% block admin_content %}
+<div class="row g-3">
+    <div class="col-lg-8">
+        <div class="admin-card h-100">
+            <div class="admin-card-title">Prediction Record #{{ prediction.prediction_id }}</div>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="meta-label">Customer</div>
+                    <div class="meta-value">{{ prediction.customer_name }}</div>
+                </div>
+                <div class="col-md-6">
+                    <div class="meta-label">Prediction Date</div>
+                    <div class="meta-value">{{ prediction.prediction_date }}</div>
+                </div>
+                <div class="col-md-6">
+                    <div class="meta-label">Estimated Property Value</div>
+                    <div class="meta-value text-success">RM {{ "{:,.2f}".format(prediction.estimated_value) }}</div>
+                </div>
+                <div class="col-md-6">
+                    <div class="meta-label">Property Type</div>
+                    <div class="meta-value">{{ meta.property_type }}</div>
+                </div>
+                <div class="col-md-6">
+                    <div class="meta-label">Location</div>
+                    <div class="meta-value">{{ meta.location }}</div>
+                </div>
+                <div class="col-md-6">
+                    <div class="meta-label">Tenure</div>
+                    <div class="meta-value">{{ meta.tenure }}</div>
+                </div>
+                <div class="col-md-4">
+                    <div class="meta-label">Built-up Size</div>
+                    <div class="meta-value">{{ "{:,.0f}".format(meta.built_up_size) }} sqft</div>
+                </div>
+                <div class="col-md-4">
+                    <div class="meta-label">Land Size</div>
+                    <div class="meta-value">{{ "{:,.0f}".format(meta.land_size) }} sqft</div>
+                </div>
+                <div class="col-md-2">
+                    <div class="meta-label">Bedrooms</div>
+                    <div class="meta-value">{{ meta.bedrooms }}</div>
+                </div>
+                <div class="col-md-2">
+                    <div class="meta-label">Bathrooms</div>
+                    <div class="meta-value">{{ meta.bathrooms }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="admin-card h-100">
+            <div class="admin-card-title">Matched Reference Property</div>
+            {% if reference_property %}
+                <div class="meta-label">Title</div>
+                <div class="meta-value">{{ reference_property.title }}</div>
+                <div class="meta-label mt-2">Area / State</div>
+                <div class="meta-value">{{ reference_property.area }}, {{ reference_property.negeri }}</div>
+                <div class="meta-label mt-2">Listing Price</div>
+                <div class="meta-value">RM {{ "{:,.2f}".format(reference_property.listing_price) }}</div>
+            {% else %}
+                <div class="text-muted">No matching reference property found in current dataset.</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="admin-card mt-3">
+    <div class="admin-card-title">Nearby Facilities (If Available)</div>
+    <div class="row g-3">
+        <div class="col-md-3">
+            <div class="facility-box">
+                <div class="facility-label">School</div>
+                {% if facilities.school %}
+                    <div class="facility-name">{{ facilities.school.name }}</div>
+                    <div class="facility-sub">{{ facilities.school.category }} · {{ facilities.school.distance_km }} km</div>
+                {% else %}
+                    <div class="facility-sub">Data not available.</div>
+                {% endif %}
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="facility-box">
+                <div class="facility-label">Hospital</div>
+                {% if facilities.hospital %}
+                    <div class="facility-name">{{ facilities.hospital.name }}</div>
+                    <div class="facility-sub">{{ facilities.hospital.distance_km }} km</div>
+                {% else %}
+                    <div class="facility-sub">Data not available.</div>
+                {% endif %}
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="facility-box">
+                <div class="facility-label">Mall</div>
+                <div class="facility-sub">Data not available in current dataset.</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="facility-box">
+                <div class="facility-label">Public Transport</div>
+                <div class="facility-sub">Data not available in current dataset.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="mt-3">
+    <a href="{{ url_for('admin_predictions') }}" class="btn btn-outline-secondary">Back to Prediction Records</a>
+</div>
+{% endblock %}

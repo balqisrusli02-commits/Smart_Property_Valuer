@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-5 col-md-7">
+        <div class="card shadow-sm auth-card">
+            <div class="card-body p-4">
+                <h1 class="h4 mb-1">Login</h1>
+                <p class="text-muted small mb-4">Access property details, prediction history, and admin workspace (if authorized).</p>
+
+                <form method="post" action="{{ url_for('login') }}">
+                    <input type="hidden" name="next" value="{{ next_url }}">
+                    <input type="hidden" name="login_as" value="{{ selected_role or 'user' }}">
+
+                    <div class="mb-3">
+                        <label class="form-label" for="login_as_select">Login As</label>
+                        <select class="form-select" id="login_as_select">
+                            <option value="user" {{ 'selected' if (selected_role or 'user') == 'user' else '' }}>User</option>
+                            <option value="admin" {{ 'selected' if (selected_role or 'user') == 'admin' else '' }}>Admin</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label" for="email">Email</label>
+                        <input
+                            class="form-control"
+                            type="email"
+                            id="email"
+                            name="email"
+                            value="{{ form_data.get('email', '') if form_data else '' }}"
+                            required
+                        >
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label" for="password">Password</label>
+                        <input class="form-control" type="password" id="password" name="password" required>
+                    </div>
+
+                    <button type="submit" class="btn btn-neon-primary w-100">Login</button>
+                </form>
+
+                <div class="text-center small mt-3">
+                    <a href="{{ url_for('forgot_password') }}" class="link-light">Forgot Password</a>
+                    <span class="mx-1">|</span>
+                    <a href="{{ url_for('password_reset_status') }}" class="link-light">Check Request Status</a>
+                </div>
+
+                <div class="text-center small mt-3">
+                    No account?
+                    <a href="{{ url_for('register') }}" class="link-light">Register</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    (function () {
+        const roleSelect = document.getElementById("login_as_select");
+        const roleInput = document.querySelector('input[name="login_as"]');
+        if (!roleSelect || !roleInput) {
+            return;
+        }
+        roleSelect.addEventListener("change", function () {
+            roleInput.value = roleSelect.value;
+        });
+    })();
+</script>
+{% endblock %}

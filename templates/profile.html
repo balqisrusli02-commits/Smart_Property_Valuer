@@ -1,0 +1,235 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="profile-page">
+    <div class="card shadow-sm profile-card">
+        <div class="card-body p-4">
+            <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+                <div>
+                    <h1 class="h4 mb-1">My Profile</h1>
+                    <p class="text-muted small mb-0">Your details are kept private and used for safe contact.</p>
+                </div>
+                <a href="{{ url_for('logout') }}" class="btn btn-neon-outline btn-sm">Logout</a>
+            </div>
+
+            <form method="post" action="{{ url_for('profile') }}" enctype="multipart/form-data" class="row g-4">
+                <div class="col-lg-4">
+                    <div class="profile-preview-panel text-center">
+                        {% set default_profile_image = url_for('default_profile_image') %}
+                        {% set profile_preview = user.profile_image_src or '' %}
+                        <div
+                            class="profile-avatar-wrap mx-auto"
+                            style="width: {{ user.avatar_size or 120 }}px; height: {{ user.avatar_size or 120 }}px;"
+                        >
+                            <img
+                                src="{{ profile_preview or default_profile_image }}"
+                                alt="Profile photo"
+                                class="profile-avatar-image"
+                                onerror="this.onerror=null;this.src='{{ default_profile_image }}';"
+                            >
+                        </div>
+
+                        <div class="mt-3">
+                            <label class="form-label" for="profile_image">Upload Profile Image</label>
+                            <input
+                                class="form-control"
+                                type="file"
+                                id="profile_image"
+                                name="profile_image"
+                                accept="image/png,image/jpeg,image/webp"
+                            >
+                            <div class="small text-muted mt-1">Upload JPG, PNG, or WEBP (max 3 MB).</div>
+                        </div>
+
+                        <div class="mt-3">
+                            <label class="form-label" for="avatar_size">Image Size</label>
+                            <input
+                                class="form-range"
+                                type="range"
+                                id="avatar_size"
+                                name="avatar_size"
+                                min="80"
+                                max="200"
+                                value="{{ user.avatar_size or 120 }}"
+                            >
+                            <div class="small text-muted"><span id="avatarSizeValue">{{ user.avatar_size or 120 }}</span> px</div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="col-lg-8">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label">Website Theme</label>
+                            <input
+                                type="hidden"
+                                id="profile_theme"
+                                name="profile_theme"
+                                value="{{ (form_data.get('profile_theme') if form_data else user.profile_theme) or 'neon-purple' }}"
+                            >
+                            <div class="theme-button-group">
+                                {% for key, label in profile_theme_options.items() %}
+                                    <button
+                                        type="button"
+                                        class="theme-choice-btn theme-choice-{{ key }} {% if ((form_data.get('profile_theme') if form_data else user.profile_theme) or 'neon-purple') == key %}is-active{% endif %}"
+                                        data-theme="{{ key }}"
+                                    >
+                                        <span class="theme-choice-swatch" aria-hidden="true"></span>
+                                        <span class="theme-choice-label">{{ label }}</span>
+                                    </button>
+                                {% endfor %}
+                            </div>
+                            <div class="small text-muted mt-2">Changes the background theme for the whole website.</div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label" for="full_name">Name</label>
+                            <input
+                                class="form-control"
+                                type="text"
+                                id="full_name"
+                                name="full_name"
+                                value="{{ (form_data.get('full_name') if form_data else user.full_name) or '' }}"
+                            >
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label" for="email">Email</label>
+                            <div class="profile-readonly-field" id="email">{{ user.email }}</div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label" for="contact_number">Contact Number</label>
+                            <input
+                                class="form-control"
+                                type="text"
+                                id="contact_number"
+                                name="contact_number"
+                                value="{{ (form_data.get('contact_number') if form_data else user.contact_number) or '' }}"
+                            >
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label" for="marital_status">Marital Status</label>
+                            <select class="form-select" id="marital_status" name="marital_status">
+                                <option value="">Select...</option>
+                                {% for key, label in marital_status_options.items() %}
+                                    <option
+                                        value="{{ key }}"
+                                        {% if (form_data.get('marital_status') if form_data else user.marital_status) == key %}selected{% endif %}
+                                    >
+                                        {{ label }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label" for="family_count">Number of Family</label>
+                            <input
+                                class="form-control"
+                                type="number"
+                                min="1"
+                                id="family_count"
+                                name="family_count"
+                                value="{{ (form_data.get('family_count') if form_data else user.family_count) or '' }}"
+                            >
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label" for="address">Address</label>
+                            <textarea
+                                class="form-control"
+                                id="address"
+                                name="address"
+                                rows="3"
+                            >{{ (form_data.get('address') if form_data else user.address) or '' }}</textarea>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label" for="postcode">Postcode</label>
+                            <input
+                                class="form-control"
+                                type="text"
+                                id="postcode"
+                                name="postcode"
+                                maxlength="5"
+                                inputmode="numeric"
+                                pattern="\d{5}"
+                                placeholder="e.g. 43000"
+                                value="{{ (form_data.get('postcode') if form_data else user.postcode) or '' }}"
+                            >
+                        </div>
+
+                        <div class="col-md-6">
+                            {% set selected_value = (form_data.get('state') if form_data else user.state) or '' %}
+                            {% include 'partials/state_select.html' %}
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <button type="submit" class="btn btn-neon-primary">Save Profile</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function () {
+        const popupMessage = {{ popup_message|default('', true)|tojson }};
+        if (popupMessage) {
+            window.alert(popupMessage);
+        }
+
+        const avatarSizeInput = document.getElementById("avatar_size");
+        const avatarSizeValue = document.getElementById("avatarSizeValue");
+        const avatarWrap = document.querySelector(".profile-avatar-wrap");
+        const themeInput = document.getElementById("profile_theme");
+        const themeButtons = document.querySelectorAll(".theme-choice-btn");
+        const siteThemeClasses = [
+            "site-theme-neon-purple",
+            "site-theme-ocean-blue",
+            "site-theme-sunset-orange",
+            "site-theme-emerald-green",
+        ];
+
+        function updateAvatarSize() {
+            if (!avatarSizeInput || !avatarWrap) {
+                return;
+            }
+            const size = avatarSizeInput.value;
+            avatarWrap.style.width = size + "px";
+            avatarWrap.style.height = size + "px";
+            if (avatarSizeValue) {
+                avatarSizeValue.textContent = size;
+            }
+        }
+
+        function setTheme(themeValue) {
+            if (!themeInput) {
+                return;
+            }
+            themeInput.value = themeValue;
+            themeButtons.forEach(function (button) {
+                button.classList.toggle("is-active", button.dataset.theme === themeValue);
+            });
+            siteThemeClasses.forEach(function (themeClass) {
+                document.body.classList.remove(themeClass);
+            });
+            document.body.classList.add("site-theme-" + themeValue);
+        }
+
+        if (avatarSizeInput) {
+            avatarSizeInput.addEventListener("input", updateAvatarSize);
+        }
+        themeButtons.forEach(function (button) {
+            button.addEventListener("click", function () {
+                setTheme(button.dataset.theme);
+            });
+        });
+    })();
+</script>
+{% endblock %}

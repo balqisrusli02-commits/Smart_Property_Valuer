@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h1 class="h4 mb-3">Price Prediction Page</h1>
+                <p class="text-muted">
+                    Enter property details to generate a predicted price and similar property recommendations.
+                </p>
+                <form method="post" action="{{ url_for('predict') }}" class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label" for="Built_Up_SF">Built Up (sqft)</label>
+                        <button
+                            type="button"
+                            class="info-icon-btn"
+                            data-bs-toggle="tooltip"
+                            data-bs-trigger="hover"
+                            data-bs-placement="right"
+                            title="Build-up Size: Indoor usable floor space. Range: 150 to 10,000 sqft."
+                            aria-label="Show build-up size guide"
+                        >i</button>
+                        <input class="form-control" type="number" step="any" min="150" max="10000" id="Built_Up_SF" name="Built_Up_SF" value="{{ submitted_data.get('Built_Up_SF', '') }}" required>
+                        <div class="small text-muted mt-1">Allowed range: 150 - 10,000 sqft.</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="Land_Size">Land Size (sqft)</label>
+                        <button
+                            type="button"
+                            class="info-icon-btn"
+                            data-bs-toggle="tooltip"
+                            data-bs-trigger="hover"
+                            data-bs-placement="right"
+                            title="Land Size: Total plot size, including the building and outdoor area. Range: 150 to 20,000 sqft."
+                            aria-label="Show size guide"
+                        >i</button>
+                        <input class="form-control" type="number" step="any" min="150" max="20000" id="Land_Size" name="Land_Size" value="{{ submitted_data.get('Land_Size', '') }}" required>
+                        <div class="small text-muted mt-1">Allowed range: 150 - 20,000 sqft.</div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label" for="Bedroom">Bedroom</label>
+                        <input class="form-control" type="number" step="1" min="1" id="Bedroom" name="Bedroom" value="{{ submitted_data.get('Bedroom', '') }}" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label" for="Bathroom">Bathroom</label>
+                        <input class="form-control" type="number" step="1" min="1" id="Bathroom" name="Bathroom" value="{{ submitted_data.get('Bathroom', '') }}" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label" for="Car_Park">Car Park</label>
+                        <input class="form-control" type="number" step="1" min="0" id="Car_Park" name="Car_Park" value="{{ submitted_data.get('Car_Park', '') }}" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="Furnishing">Furnishing</label>
+                        <select class="form-select" id="Furnishing" name="Furnishing" required>
+                            <option value="">Select...</option>
+                            {% for key, label in furnishing_options.items() %}
+                                <option value="{{ key }}" {% if submitted_data.get('Furnishing')|string == key|string %}selected{% endif %}>
+                                    {{ key }} - {{ label }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="Tenure">Tenure</label>
+                        <button
+                            type="button"
+                            class="info-icon-btn"
+                            data-bs-toggle="tooltip"
+                            data-bs-trigger="hover"
+                            data-bs-placement="right"
+                            data-bs-html="true"
+                            title="Freehold: Owner has permanent ownership of the property and land.<br>Leasehold: Owner has the right to use the property for a fixed period (for example, 99 years)."
+                            aria-label="Show tenure guide"
+                        >i</button>
+                        <select class="form-select" id="Tenure" name="Tenure" required>
+                            <option value="">Select...</option>
+                            {% for key, label in tenure_options.items() %}
+                                <option value="{{ key }}" {% if submitted_data.get('Tenure')|string == key|string %}selected{% endif %}>
+                                    {{ key }} - {{ label }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="Property_Type">Property Type</label>
+                        <select class="form-select" id="Property_Type" name="Property_Type" required>
+                            <option value="">Select...</option>
+                            {% for key, label in property_type_options.items() %}
+                                <option value="{{ key }}" {% if submitted_data.get('Property_Type')|string == key|string %}selected{% endif %}>
+                                    {{ key }} - {{ label }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="Unit_Type">Unit Type</label>
+                        <select class="form-select" id="Unit_Type" name="Unit_Type" required>
+                            <option value="">Select...</option>
+                            {% for key, label in unit_type_options.items() %}
+                                <option value="{{ key }}" {% if submitted_data.get('Unit_Type')|string == key|string %}selected{% endif %}>
+                                    {{ key }} - {{ label }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        {% set selected_value = submitted_data.get('state', '') %}
+                        {% set required = true %}
+                        {% include 'partials/state_select.html' %}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="area_text">Area (optional)</label>
+                        <input class="form-control" type="text" id="area_text" name="area_text" value="{{ submitted_data.get('area_text', '') }}" placeholder="Example: Shah Alam">
+                    </div>
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-primary">Generate Prediction</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="card shadow-sm h-100">
+            <div class="card-body">
+                <h2 class="h5">Prediction Result</h2>
+                {% if prediction is defined %}
+                    <p class="display-6 text-success fw-bold">RM {{ "{:,.2f}".format(prediction) }}</p>
+                    <p class="text-muted mb-0">This predicted value is generated by your trained XGBoost model.</p>
+                {% else %}
+                    <p class="text-muted mb-0">The prediction will appear after you submit the form.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if recommendations %}
+<div class="card shadow-sm mt-4 predict-reco-card">
+    <div class="card-body">
+        <h2 class="h5 mb-3">Property Recommendations (MySQL Listing Price + Feature Match)</h2>
+        <div class="table-responsive predict-reco-wrap">
+            <table class="table table-striped align-middle predict-reco-table">
+                <thead>
+                    <tr>
+                        <th>Property ID</th>
+                        <th>Name</th>
+                        <th>Location</th>
+                        <th>Type</th>
+                        <th>Beds / Baths</th>
+                        <th>SQL Listing Price (RM)</th>
+                        <th>Gap vs Predicted</th>
+                        <th>Score</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in recommendations %}
+                        <tr>
+                            <td>{{ item.id }}</td>
+                            <td>{{ item.title }}</td>
+                            <td>{{ item.area }}, {{ item.negeri }}</td>
+                            <td>{{ property_type_options.get(item.property_type, "Unknown") }}</td>
+                            <td>{{ item.bedroom|int }} / {{ item.bathroom|int }}</td>
+                            <td>{{ "{:,.2f}".format(item.sql_listing_price) }}</td>
+                            <td>{{ item.price_gap_percent }}%</td>
+                            <td>{{ item.score_percent }}%</td>
+                            <td>
+                                <a class="btn btn-sm btn-outline-primary btn-details" href="{{ url_for('property_detail', property_id=item.id) }}">Details</a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <p class="small text-muted mb-0 mt-2">
+            Price shown above is from SQL column <code>property_listings.listing_price</code>.
+        </p>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

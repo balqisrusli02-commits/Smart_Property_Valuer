@@ -1,0 +1,149 @@
+{% extends "admin/base.html" %}
+
+{% block admin_content %}
+{% if metrics.used_mock %}
+<div class="alert alert-warning mb-3" role="alert">
+    Model metrics are currently shown using fallback values.
+</div>
+{% endif %}
+
+<div class="row g-3 mb-3">
+    <div class="col-md-6 col-xl-3">
+        <div class="admin-stat-card">
+            <div class="stat-label">Model Name</div>
+            <div class="stat-value stat-text">{{ metrics.model_name }}</div>
+            <div class="stat-description">
+                This is the active model currently used for prediction in the system.
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+        <div class="admin-stat-card">
+            <div class="stat-label">R2 Score</div>
+            <div class="stat-value">{{ "%.4f"|format(metrics.r2) }}</div>
+            <div class="stat-description">
+                Indicates how much variance in actual property prices is explained by the model (higher is better).
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+        <div class="admin-stat-card">
+            <div class="stat-label">RMSE</div>
+            <div class="stat-value">{{ "{:,.0f}".format(metrics.rmse) }}</div>
+            <div class="stat-description">
+                Penalizes larger prediction errors more strongly; lower RMSE means fewer large misses.
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+        <div class="admin-stat-card">
+            <div class="stat-label">MAE</div>
+            <div class="stat-value">{{ "{:,.0f}".format(metrics.mae) }}</div>
+            <div class="stat-description">
+                Average absolute difference between predicted and actual price; lower MAE means better accuracy.
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-7">
+        <div class="admin-card">
+            <div class="admin-card-title">Performance Chart</div>
+            <div class="admin-chart-wrap admin-chart-wrap-compact">
+                <canvas id="modelChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="admin-card h-100">
+            <div class="admin-card-title">Model Information</div>
+            <p class="mb-2"><strong>Reliability:</strong> {{ metrics.reliability }}</p>
+            <p class="mb-2"><strong>Last Training Date:</strong> {{ metrics.last_training_date }}</p>
+            <p class="mb-0"><strong>Evaluation Samples:</strong> {{ metrics.sample_size }}</p>
+        </div>
+    </div>
+</div>
+
+<div class="admin-card mt-3">
+    <div class="admin-card-title">Model Explanation</div>
+    <p class="mb-2">
+        The machine learning model is used to estimate property value based on property features such as
+        location, built-up size, land size, number of bedrooms/bathrooms, tenure, and property type.
+    </p>
+    <p class="mb-2">
+        The deployed model is <strong>{{ metrics.model_name }}</strong>. After hyperparameter tuning,
+        the selected XGBoost configuration uses the parameter values below for training and prediction.
+    </p>
+    <p class="mb-3 text-muted">{{ metrics.evaluation_note }}</p>
+    <div class="meta-label mb-2">XGBoost After-Tuning Parameter Values</div>
+    {% if metrics.parameter_items %}
+        <div class="table-responsive">
+            <table class="table table-sm admin-table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Parameter</th>
+                        <th>Value</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in metrics.parameter_items %}
+                    <tr>
+                        <td>
+                            <span class="param-name-cell">
+                                <code>{{ item.name }}</code>
+                                {% if item.description %}
+                                <button
+                                    type="button"
+                                    class="info-icon-btn"
+                                    data-bs-toggle="tooltip"
+                                    data-bs-trigger="hover focus"
+                                    data-bs-placement="right"
+                                    title="{{ item.description }}"
+                                    aria-label="Explain {{ item.name }} parameter"
+                                >i</button>
+                                {% endif %}
+                            </span>
+                        </td>
+                        <td><strong>{{ item.value }}</strong></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p class="mb-0 text-muted">Parameter values are not available.</p>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block admin_scripts %}
+<script>
+    const modelCtx = document.getElementById("modelChart");
+    if (modelCtx) {
+        new Chart(modelCtx, {
+            type: "bar",
+            data: {
+                labels: {{ chart_data.labels | tojson }},
+                datasets: [{
+                    label: "Metric Value",
+                    data: {{ chart_data.series | tojson }},
+                    backgroundColor: ["#1d4ed8", "#f59e0b", "#10b981"]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+    }
+
+    if (window.bootstrap && window.bootstrap.Tooltip) {
+        document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (node) {
+            if (!window.bootstrap.Tooltip.getInstance(node)) {
+                new window.bootstrap.Tooltip(node);
+            }
+        });
+    }
+</script>
+{% endblock %}

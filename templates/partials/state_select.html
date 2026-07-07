@@ -1,0 +1,12 @@
+<label class="form-label" for="{{ field_id|default('state') }}">State</label>
+<select
+    class="form-select"
+    id="{{ field_id|default('state') }}"
+    name="{{ field_name|default('state') }}"
+    {% if required %}required{% endif %}
+>
+    <option value="">Select state...</option>
+    {% for negeri in state_choices %}
+        <option value="{{ negeri }}" {% if selected_value == negeri %}selected{% endif %}>{{ negeri }}</option>
+    {% endfor %}
+</select>

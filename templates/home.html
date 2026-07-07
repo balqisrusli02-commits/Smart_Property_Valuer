@@ -1,0 +1,294 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="home-hero mb-4">
+    <div class="home-hero-inner">
+        <div class="home-intro">
+            <h1 class="home-title mb-2">Smart Property Valuer</h1>
+            {% if current_user %}
+            <p class="home-tagline mb-2">
+                Welcome back, {{ current_user.full_name or current_user.email.split('@')[0] }}.
+            </p>
+            {% else %}
+            <p class="home-tagline mb-2">Predict prices. Search listings.</p>
+            {% endif %}
+            <p class="home-purpose mb-0">
+                Built for first-time buyers to estimate property value, explore suitable units,
+                and plan your budget before making a decision.
+            </p>
+        </div>
+        <div class="home-actions">
+            <a class="btn btn-neon-primary btn-lg" href="{{ url_for('predict') }}">Predict</a>
+            <a class="btn btn-neon-outline btn-lg" href="{{ url_for('search') }}">Search</a>
+        </div>
+        {% if model_metrics %}
+        <div class="home-metric">
+            Model accuracy: <strong>{{ model_metrics.estimated_accuracy_pct }}%</strong>
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+{% if current_user %}
+<section class="home-suggest-section mb-4">
+    <div class="home-suggest-header">
+        <div>
+            <div class="home-suggest-kicker">For You</div>
+            <h2 class="home-suggest-title mb-1">
+                {% if property_suggestions.state %}
+                    Suggested in {{ property_suggestions.state }}
+                {% else %}
+                    Personalised Suggestions
+                {% endif %}
+            </h2>
+            <p class="home-suggest-subtitle mb-0">
+                {% if property_suggestions.state %}
+                    Properties picked based on your profile state
+                    {% if current_user.family_count %} and family size{% endif %}.
+                {% else %}
+                    Complete your profile to unlock location-based recommendations.
+                {% endif %}
+            </p>
+        </div>
+        {% if property_suggestions.state %}
+            <a
+                class="btn btn-neon-outline btn-sm"
+                href="{{ url_for('search', state=property_suggestions.state) }}"
+            >
+                View all in {{ property_suggestions.state }}
+            </a>
+        {% else %}
+            <a class="btn btn-neon-outline btn-sm" href="{{ url_for('profile') }}">Update Profile</a>
+        {% endif %}
+    </div>
+
+    {% if property_suggestions.message %}
+        <div class="home-suggest-empty">{{ property_suggestions.message }}</div>
+    {% elif property_suggestions.properties %}
+        <div class="row g-3 home-suggest-grid">
+            {% for item in property_suggestions.properties %}
+                <div class="col-md-6 col-xl-4">
+                    <article class="home-property-card h-100">
+                        <div class="home-property-media">
+                            {% if item.image_url %}
+                                <img
+                                    src="{{ item.image_url }}"
+                                    alt="Property image for {{ item.title }}"
+                                    loading="lazy"
+                                    referrerpolicy="no-referrer"
+                                >
+                            {% else %}
+                                <div class="home-property-media-fallback">
+                                    <span>{{ property_type_options.get(item.property_type, 'Property')[:1] }}</span>
+                                </div>
+                            {% endif %}
+                            <span class="home-property-badge">
+                                {{ property_type_options.get(item.property_type, 'Property') }}
+                            </span>
+                        </div>
+                        <div class="home-property-body">
+                            <h3 class="home-property-name">{{ item.title }}</h3>
+                            <p class="home-property-location mb-2">{{ item.area }}, {{ item.negeri }}</p>
+                            <div class="home-property-meta">
+                                <span>{{ item.bedroom }} Bed</span>
+                                <span>{{ item.bathroom }} Bath</span>
+                                <span>{{ item.built_up_sf|int }} sqft</span>
+                            </div>
+                            <div class="home-property-footer">
+                                <div>
+                                    <div class="home-property-price">RM {{ "{:,.2f}".format(item.listing_price) }}</div>
+                                    <div class="small text-muted">MySQL listing price</div>
+                                </div>
+                                <a
+                                    class="btn btn-sm btn-details"
+                                    href="{{ url_for('property_detail', property_id=item.id) }}"
+                                >
+                                    Details
+                                </a>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+            {% endfor %}
+        </div>
+        {% if property_suggestions.total_count > property_suggestions.properties|length %}
+            <div class="small text-muted mt-3">
+                Showing {{ property_suggestions.properties|length }} of {{ property_suggestions.total_count }} listings in {{ property_suggestions.state }}.
+            </div>
+        {% endif %}
+    {% else %}
+        <div class="home-suggest-empty">
+            No matching properties found in {{ property_suggestions.state }} yet. Try Property Search for more options.
+        </div>
+    {% endif %}
+</section>
+{% endif %}
+
+{% if sales_distribution.labels %}
+<div class="row g-3 mb-4 home-stats">
+    <div class="col-md-4">
+        <div class="meta-box shadow-sm h-100">
+            <div class="meta-label">Most Listings</div>
+            <div class="meta-value">{{ sales_distribution.top_state.state_name }}</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="meta-box shadow-sm h-100">
+            <div class="meta-label">States</div>
+            <div class="meta-value">{{ sales_distribution.labels | length }}</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="meta-box shadow-sm h-100">
+            <div class="meta-label">Listings</div>
+            <div class="meta-value">{{ sales_distribution.counts | sum }}</div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="row g-4 mt-1">
+    <div class="col-lg-6">
+        <div class="card shadow-sm home-chart-card h-100">
+            <div class="card-body">
+                <h2 class="home-section-title">Listings Distribution</h2>
+                <p class="text-muted small mb-3">
+                    This chart shows the proportion of available property listings across different states.
+                </p>
+                {% if sales_distribution.labels %}
+                    <div class="chart-wrap">
+                        <canvas id="stateSalesPieChart" height="240"></canvas>
+                    </div>
+                {% else %}
+                    <p class="text-muted mb-0">No data yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card shadow-sm home-chart-card h-100">
+            <div class="card-body">
+                <h2 class="home-section-title">Highest Price by State</h2>
+                <p class="text-muted small mb-3">
+                    This chart highlights the highest listed property price recorded for each state.
+                </p>
+                {% if highest_price_distribution.labels %}
+                    <div class="chart-wrap">
+                        <canvas id="stateHighestPriceBarChart" height="240"></canvas>
+                    </div>
+                {% else %}
+                    <p class="text-muted mb-0">No data yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if sales_distribution.labels or highest_price_distribution.labels %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const stateLabels = {{ sales_distribution.labels | tojson }};
+    const stateValues = {{ sales_distribution.counts | tojson }};
+    const chartColors = stateLabels.map((_, i) => `hsl(${(i * 35) % 360} 70% 55%)`);
+    const totalListings = stateValues.reduce((sum, value) => sum + value, 0);
+    const highestPriceLabels = {{ highest_price_distribution.labels | tojson }};
+    const highestPriceValues = {{ highest_price_distribution.max_prices | tojson }};
+
+    const pieCtx = document.getElementById("stateSalesPieChart");
+    if (pieCtx) {
+        new Chart(pieCtx, {
+            type: "doughnut",
+            data: {
+                labels: stateLabels,
+                datasets: [{
+                    data: stateValues,
+                    backgroundColor: chartColors,
+                    borderColor: "#ffffff",
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: "bottom",
+                        labels: {
+                            boxWidth: 12,
+                            padding: 12,
+                            color: "#d6defc"
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const value = context.parsed || 0;
+                                const pct = totalListings ? ((value / totalListings) * 100).toFixed(1) : 0;
+                                return `${context.label}: ${value} (${pct}%)`;
+                            }
+                        }
+                    }
+                },
+                cutout: "52%"
+            }
+        });
+    }
+
+    const barCtx = document.getElementById("stateHighestPriceBarChart");
+    if (barCtx) {
+        new Chart(barCtx, {
+            type: "bar",
+            data: {
+                labels: highestPriceLabels,
+                datasets: [{
+                    label: "Highest Price (RM)",
+                    data: highestPriceValues,
+                    backgroundColor: "rgba(109, 118, 255, 0.7)",
+                    borderColor: "rgba(144, 157, 255, 1)",
+                    borderWidth: 1.2,
+                    borderRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const value = context.parsed.y || 0;
+                                return `RM ${value.toLocaleString(undefined, {maximumFractionDigits: 2})}`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        ticks: {
+                            color: "#d6defc",
+                            maxRotation: 55,
+                            minRotation: 30
+                        },
+                        grid: {
+                            color: "rgba(160, 177, 241, 0.15)"
+                        }
+                    },
+                    y: {
+                        ticks: {
+                            color: "#d6defc",
+                            callback: function(value) {
+                                return "RM " + Number(value).toLocaleString();
+                            }
+                        },
+                        grid: {
+                            color: "rgba(160, 177, 241, 0.15)"
+                        }
+                    }
+                }
+            }
+        });
+    }
+</script>
+{% endif %}
+{% endblock %}

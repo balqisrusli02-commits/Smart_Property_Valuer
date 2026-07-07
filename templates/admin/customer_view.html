@@ -1,0 +1,79 @@
+{% extends "admin/base.html" %}
+
+{% block admin_content %}
+<div class="admin-card">
+    {% set default_profile_image = url_for('default_profile_image') %}
+    <div class="customer-profile-header mb-4">
+        <div class="customer-profile-avatar">
+            <img
+                src="{{ customer.profile_image_src or default_profile_image }}"
+                alt="Profile image for {{ customer.name }}"
+                class="customer-profile-image"
+                onerror="this.onerror=null;this.src='{{ default_profile_image }}';"
+            >
+        </div>
+        <div class="customer-profile-meta">
+            <div class="h5 mb-1">{{ customer.name }}</div>
+            <div class="text-muted mb-2">{{ customer.email }}</div>
+            <span class="badge {{ 'text-bg-success' if customer.status == 'Active' else 'text-bg-secondary' }}">
+                {{ customer.status }}
+            </span>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-md-6">
+            <div class="meta-label">Customer ID</div>
+            <div class="meta-value">#{{ customer.customer_id }}</div>
+        </div>
+        <div class="col-md-6">
+            <div class="meta-label">Status</div>
+            <div class="meta-value">{{ customer.status }}</div>
+        </div>
+        <div class="col-md-6">
+            <div class="meta-label">Name</div>
+            <div class="meta-value">{{ customer.name }}</div>
+        </div>
+        <div class="col-md-6">
+            <div class="meta-label">Email</div>
+            <div class="meta-value">{{ customer.email }}</div>
+        </div>
+        <div class="col-md-6">
+            <div class="meta-label">Phone Number</div>
+            <div class="meta-value">{{ customer.phone }}</div>
+        </div>
+        <div class="col-md-6">
+            <div class="meta-label">Marital Status</div>
+            <div class="meta-value">{{ customer.marital_status }}</div>
+        </div>
+        <div class="col-md-6">
+            <div class="meta-label">Number of Family</div>
+            <div class="meta-value">{{ customer.family_count }}</div>
+        </div>
+        <div class="col-md-6">
+            <div class="meta-label">Registered Date</div>
+            <div class="meta-value">{{ customer.registered_date }}</div>
+        </div>
+        <div class="col-md-6">
+            <div class="meta-label">State</div>
+            <div class="meta-value">{{ customer.state }}</div>
+        </div>
+        <div class="col-md-6">
+            <div class="meta-label">Postcode</div>
+            <div class="meta-value">{{ customer.postcode }}</div>
+        </div>
+        <div class="col-12">
+            <div class="meta-label">Address</div>
+            <div class="meta-value">{{ customer.address }}</div>
+        </div>
+        <div class="col-12">
+            <div class="meta-label">Prediction Records</div>
+            <div class="meta-value">{{ predictions_total }}</div>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <a href="{{ url_for('admin_customers') }}" class="btn btn-outline-secondary">Back</a>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,183 @@
+{% extends "admin/base.html" %}
+
+{% block admin_content %}
+{% if using_mock_data %}
+<div class="alert alert-warning mb-3" role="alert">
+    Some sections are showing mock/sample data because live backend data is unavailable.
+</div>
+{% endif %}
+
+<div class="row g-3 mb-3">
+    <div class="col-md-6 col-xl-3">
+        <div class="admin-stat-card">
+            <div class="stat-label">Total Customers</div>
+            <div class="stat-value">{{ total_customers }}</div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+        <div class="admin-stat-card">
+            <div class="stat-label">Total Property Valuations</div>
+            <div class="stat-value">{{ total_valuations }}</div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+        <div class="admin-stat-card">
+            <div class="stat-label">Total Prediction Records</div>
+            <div class="stat-value">{{ total_predictions }}</div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+        <div class="admin-stat-card">
+            <div class="stat-label">Model R2 Score</div>
+            <div class="stat-value">{{ "%.4f"|format(model_metrics.r2) }}</div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+        <div class="admin-stat-card">
+            <div class="stat-label">Pending Password Reset Requests</div>
+            <div class="stat-value">{{ pending_reset_requests }}</div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-xl-7">
+        <div class="admin-card h-100">
+            <div class="admin-card-title">Platform Summary</div>
+            <div class="admin-chart-wrap">
+                <canvas id="summaryChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-5">
+        <div class="admin-card h-100">
+            <div class="admin-card-title">Prediction Trend</div>
+            <div class="admin-chart-wrap">
+                <canvas id="trendChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="admin-card mb-3">
+    <div class="admin-card-title">Recent Prediction Activity</div>
+    <div class="table-responsive">
+        <table class="table admin-table align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Prediction ID</th>
+                    <th>Customer</th>
+                    <th>Property Type</th>
+                    <th>Location</th>
+                    <th>Estimated Value</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in recent_activity %}
+                <tr>
+                    <td>#{{ row.prediction_id }}</td>
+                    <td>{{ row.customer_name }}</td>
+                    <td>{{ row.property_type }}</td>
+                    <td>{{ row.location }}</td>
+                    <td>RM {{ "{:,.2f}".format(row.estimated_value) }}</td>
+                    <td>{{ row.prediction_date }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" class="text-center text-muted py-4">No prediction activity found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="admin-card">
+    <div class="admin-card-title">Recent Password Reset Requests</div>
+    <div class="table-responsive">
+        <table class="table admin-table align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Request ID</th>
+                    <th>Customer Name</th>
+                    <th>Email</th>
+                    <th>Request Date</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in recent_reset_requests %}
+                <tr>
+                    <td>#{{ row.id }}</td>
+                    <td>{{ row.customer_name }}</td>
+                    <td>{{ row.email }}</td>
+                    <td>{{ row.request_date_label }}</td>
+                    <td>
+                        <span class="badge
+                            {% if row.status == 'Pending' %}text-bg-warning
+                            {% elif row.status == 'Approved' %}text-bg-success
+                            {% elif row.status == 'Rejected' %}text-bg-danger
+                            {% else %}text-bg-secondary{% endif %}">
+                            {{ row.status }}
+                        </span>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5" class="text-center text-muted py-4">No password reset requests found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block admin_scripts %}
+<script>
+    const summaryCtx = document.getElementById("summaryChart");
+    if (summaryCtx) {
+        new Chart(summaryCtx, {
+            type: "bar",
+            data: {
+                labels: {{ summary_chart.labels | tojson }},
+                datasets: [{
+                    label: "Count",
+                    data: {{ summary_chart.series | tojson }},
+                    backgroundColor: ["#3b82f6", "#10b981", "#f59e0b", "#ef4444"]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+            }
+        });
+    }
+
+    const trendCtx = document.getElementById("trendChart");
+    if (trendCtx) {
+        new Chart(trendCtx, {
+            type: "line",
+            data: {
+                labels: {{ trend_chart.labels | tojson }},
+                datasets: [{
+                    label: "Predictions",
+                    data: {{ trend_chart.series | tojson }},
+                    borderColor: "#2563eb",
+                    backgroundColor: "rgba(37,99,235,0.2)",
+                    fill: true,
+                    tension: 0.3
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+            }
+        });
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,35 @@
+{% extends "admin/base.html" %}
+
+{% block admin_content %}
+<div class="row g-3">
+    <div class="col-lg-6">
+        <div class="admin-card h-100">
+            <div class="admin-card-title">Admin Profile</div>
+            <form method="post">
+                <div class="mb-3">
+                    <label class="form-label">Admin Name</label>
+                    <input type="text" class="form-control" name="admin_name" value="{{ profile.name }}" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Email</label>
+                    <input type="email" class="form-control" name="admin_email" value="{{ profile.email }}" required>
+                </div>
+                <div class="mb-4">
+                    <label class="form-label">Role</label>
+                    <input type="text" class="form-control" value="{{ profile.role }}" disabled>
+                </div>
+                <button type="submit" class="btn btn-primary">Edit Profile</button>
+                <a href="{{ url_for('admin_logout') }}" class="btn btn-outline-danger ms-2">Logout</a>
+            </form>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="admin-card h-100">
+            <div class="admin-card-title">Profile Summary</div>
+            <p class="mb-2"><strong>Name:</strong> {{ profile.name }}</p>
+            <p class="mb-2"><strong>Email:</strong> {{ profile.email }}</p>
+            <p class="mb-0"><strong>Role:</strong> {{ profile.role }}</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

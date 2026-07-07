@@ -1,0 +1,5 @@
+$kind: http-request
+description: "Get one property record by database ID. Example: 2265 = P2265."
+url: "{{base_url}}/api/property/2265"
+method: GET
+order: 4000

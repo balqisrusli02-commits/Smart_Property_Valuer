@@ -1,0 +1,134 @@
+{% extends "admin/base.html" %}
+
+{% block admin_content %}
+{% if using_mock_data %}
+<div class="alert alert-warning mb-3" role="alert">
+    Prediction records are currently displayed using sample data.
+</div>
+{% endif %}
+
+<div class="admin-card mb-3">
+    <form method="get" class="row g-2 align-items-end">
+        <div class="col-md-5">
+            <label class="form-label">Search</label>
+            <input type="text" name="q" class="form-control" placeholder="Search by ID, customer, property type, or location" value="{{ filters.q }}">
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">State</label>
+            <select name="state" class="form-select">
+                <option value="all" {{ 'selected' if filters.state == 'all' else '' }}>All States</option>
+                {% for state_name in state_choices %}
+                <option value="{{ state_name }}" {{ 'selected' if filters.state == state_name else '' }}>{{ state_name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">Per Page</label>
+            <select name="per_page" class="form-select">
+                {% for option in per_page_options %}
+                    <option value="{{ option }}" {{ 'selected' if pagination.per_page == option else '' }}>{{ option }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-3 d-flex gap-2">
+            <button class="btn btn-primary flex-fill" type="submit">Apply Filter</button>
+            <a class="btn btn-outline-secondary" href="{{ url_for('admin_predictions') }}">Reset</a>
+        </div>
+    </form>
+</div>
+
+<div class="admin-card">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+        <div class="small text-muted">
+            Showing {{ pagination.start_row }}-{{ pagination.end_row }} of {{ pagination.total_rows }} records
+        </div>
+        <div class="small text-muted">
+            Page {{ pagination.page }} / {{ pagination.total_pages }}
+        </div>
+    </div>
+    <div class="table-responsive">
+        <table class="table admin-table align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Prediction ID</th>
+                    <th>Customer Name</th>
+                    <th>Property Type</th>
+                    <th>Location</th>
+                    <th>Built-up Size</th>
+                    <th>Land Size</th>
+                    <th>Bedrooms</th>
+                    <th>Bathrooms</th>
+                    <th>Tenure</th>
+                    <th>Estimated Property Value</th>
+                    <th>Prediction Date</th>
+                    <th class="text-end">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in rows %}
+                <tr>
+                    <td>#{{ row.prediction_id }}</td>
+                    <td>{{ row.customer_name }}</td>
+                    <td>{{ row.property_type }}</td>
+                    <td>{{ row.location }}</td>
+                    <td>{{ "{:,.0f}".format(row.built_up_size) }} sqft</td>
+                    <td>{{ "{:,.0f}".format(row.land_size) }} sqft</td>
+                    <td>{{ row.bedrooms }}</td>
+                    <td>{{ row.bathrooms }}</td>
+                    <td>{{ row.tenure }}</td>
+                    <td>RM {{ "{:,.2f}".format(row.estimated_value) }}</td>
+                    <td>{{ row.prediction_date }}</td>
+                    <td class="text-end">
+                        <a class="btn btn-sm btn-outline-primary" href="{{ url_for('admin_prediction_detail', prediction_id=row.prediction_id) }}">
+                            View Details
+                        </a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="12" class="text-center text-muted py-4">No prediction records found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="d-flex justify-content-end mt-3">
+        <nav aria-label="Prediction pagination">
+            <ul class="pagination pagination-sm mb-0">
+                <li class="page-item {{ 'disabled' if not pagination.has_prev else '' }}">
+                    <a class="page-link" href="{{ url_for('admin_predictions', q=filters.q, state=filters.state, per_page=pagination.per_page, page=pagination.prev_page) }}">Previous</a>
+                </li>
+
+                {% if pagination.show_first_page %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('admin_predictions', q=filters.q, state=filters.state, per_page=pagination.per_page, page=1) }}">1</a>
+                </li>
+                <li class="page-item disabled"><span class="page-link">...</span></li>
+                {% endif %}
+
+                {% for page_number in pagination.page_numbers %}
+                <li class="page-item {{ 'active' if page_number == pagination.page else '' }}">
+                    <a class="page-link" href="{{ url_for('admin_predictions', q=filters.q, state=filters.state, per_page=pagination.per_page, page=page_number) }}">
+                        {{ page_number }}
+                    </a>
+                </li>
+                {% endfor %}
+
+                {% if pagination.show_last_page and pagination.total_pages > 1 %}
+                <li class="page-item disabled"><span class="page-link">...</span></li>
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('admin_predictions', q=filters.q, state=filters.state, per_page=pagination.per_page, page=pagination.total_pages) }}">
+                        {{ pagination.total_pages }}
+                    </a>
+                </li>
+                {% endif %}
+
+                <li class="page-item {{ 'disabled' if not pagination.has_next else '' }}">
+                    <a class="page-link" href="{{ url_for('admin_predictions', q=filters.q, state=filters.state, per_page=pagination.per_page, page=pagination.next_page) }}">Next</a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+</div>
+{% endblock %}

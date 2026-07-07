@@ -1,0 +1,23 @@
+$kind: http-request
+description: Predict property price and return recommended listings.
+url: "{{base_url}}/api/predict"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "Built_Up_SF": 1200,
+      "Land_Size": 1400,
+      "Bedroom": 3,
+      "Bathroom": 2,
+      "Car_Park": 1,
+      "Furnishing": 2,
+      "Tenure": 2,
+      "Property_Type": 1,
+      "Unit_Type": 1,
+      "state": "Selangor",
+      "area_text": "Shah Alam"
+    }
+order: 2000

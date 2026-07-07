@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card shadow-sm">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+            <div>
+                <h1 class="h4 mb-1">{{ row.title }}</h1>
+                <p class="text-muted mb-0">{{ row.area }}, {{ row.negeri }}</p>
+            </div>
+            <div class="text-end">
+                <div class="h4 text-success mb-0">RM {{ "{:,.2f}".format(row.listing_price) }}</div>
+                <small class="text-muted">Current listing price estimate</small>
+            </div>
+        </div>
+
+        <div class="mb-4">
+            {% if image_url %}
+                <img
+                    src="{{ image_url }}"
+                    alt="Property image for {{ row.title }}"
+                    class="property-image w-100"
+                    loading="lazy"
+                    referrerpolicy="no-referrer"
+                >
+                <div class="small text-muted mt-2">Image source: SQL `property_listings.image_url`.</div>
+                <a
+                    class="btn btn-sm btn-outline-success mt-2"
+                    target="_blank"
+                    rel="noopener"
+                    href="{{ image_url }}"
+                >
+                    Open Source Image Link
+                </a>
+            {% else %}
+                <div class="property-image-placeholder">
+                    <div class="fw-semibold">No Image Found</div>
+                    <div class="small text-muted">
+                        Image URL is not available in SQL. Showing map fallback.
+                    </div>
+                    {% if row.latitude is not none and row.longitude is not none %}
+                        <div class="small text-muted mt-2">Map fallback based on property coordinates.</div>
+                        <div class="property-map-embed mt-3">
+                            <iframe
+                                class="property-map-frame"
+                                loading="lazy"
+                                referrerpolicy="no-referrer-when-downgrade"
+                                src="https://maps.google.com/maps?q={{ row.latitude }},{{ row.longitude }}&z=16&output=embed"
+                                title="Property map location"
+                            ></iframe>
+                        </div>
+                        <a
+                            class="btn btn-sm btn-outline-success mt-3"
+                            target="_blank"
+                            rel="noopener"
+                            href="https://www.google.com/maps/search/?api=1&query={{ row.latitude }},{{ row.longitude }}"
+                        >
+                            Open in Google Maps
+                        </a>
+                    {% else %}
+                        <div class="small text-muted mt-2">No map fallback available because property coordinates are missing.</div>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="row g-3">
+            <div class="col-md-3">
+                <div class="meta-box">
+                    <div class="meta-label">Property Type</div>
+                    <div class="meta-value">{{ property_type_options.get(row.property_type, "Unknown") }}</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="meta-box">
+                    <div class="meta-label">Built Up</div>
+                    <div class="meta-value">{{ row.built_up_sf }} sqft</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="meta-box">
+                    <div class="meta-label">Land Size</div>
+                    <div class="meta-value">{{ row.land_size }} sqft</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="meta-box">
+                    <div class="meta-label">Room Layout</div>
+                    <div class="meta-value">{{ row.bedroom }} Bedroom / {{ row.bathroom }} Bathroom</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="meta-box">
+                    <div class="meta-label">Car Park</div>
+                    <div class="meta-value">{{ row.car_park }}</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="meta-box">
+                    <div class="meta-label">Furnishing</div>
+                    <div class="meta-value">{{ furnishing_options.get(row.furnishing, "Unknown") }}</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="meta-box">
+                    <div class="meta-label">Tenure</div>
+                    <div class="meta-value">{{ tenure_options.get(row.tenure, "Unknown") }}</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="meta-box">
+                    <div class="meta-label">Unit Type</div>
+                    <div class="meta-value">{{ unit_type_options.get(row.unit_type, "Unknown") }}</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="meta-box">
+                    <div class="meta-label">Latitude</div>
+                    <div class="meta-value">{{ row.latitude if row.latitude is not none else "-" }}</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="meta-box">
+                    <div class="meta-label">Longitude</div>
+                    <div class="meta-value">{{ row.longitude if row.longitude is not none else "-" }}</div>
+                </div>
+            </div>
+        </div>
+
+        <hr>
+        <h2 class="h5 mb-3">Nearest Facilities</h2>
+        <div class="row g-3">
+            <div class="col-md-4">
+                <div class="meta-box">
+                    <div class="meta-label">Nearest Hospital</div>
+                    {% if nearest.hospital %}
+                        <div class="meta-value">{{ nearest.hospital.name }}</div>
+                        <div class="small text-muted">{{ nearest.hospital.address }}</div>
+                        <div class="small mt-1"><strong>{{ nearest.hospital.distance_km }} km</strong></div>
+                        <a class="btn btn-sm btn-outline-success mt-2" target="_blank" rel="noopener" href="{{ nearest.hospital.google_maps_url }}">Google Maps</a>
+                    {% else %}
+                        <div class="text-muted">Dataset not available.</div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="meta-box">
+                    <div class="meta-label">Nearest Primary School</div>
+                    {% if nearest.primary_school %}
+                        <div class="meta-value">{{ nearest.primary_school.name }}</div>
+                        <div class="small text-muted">{{ nearest.primary_school.address }}</div>
+                        <div class="small mt-1"><strong>{{ nearest.primary_school.distance_km }} km</strong></div>
+                        <a class="btn btn-sm btn-outline-success mt-2" target="_blank" rel="noopener" href="{{ nearest.primary_school.google_maps_url }}">Google Maps</a>
+                    {% else %}
+                        <div class="text-muted">Dataset not available.</div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="meta-box">
+                    <div class="meta-label">Nearest Secondary School</div>
+                    {% if nearest.secondary_school %}
+                        <div class="meta-value">{{ nearest.secondary_school.name }}</div>
+                        <div class="small text-muted">{{ nearest.secondary_school.address }}</div>
+                        <div class="small mt-1"><strong>{{ nearest.secondary_school.distance_km }} km</strong></div>
+                        <a class="btn btn-sm btn-outline-success mt-2" target="_blank" rel="noopener" href="{{ nearest.secondary_school.google_maps_url }}">Google Maps</a>
+                    {% else %}
+                        <div class="text-muted">Dataset not available.</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        {% if contact_number %}
+        <div class="mt-4">
+            <a href="tel:+6{{ contact_number }}" class="btn btn-contact-seller">
+                Contact Seller
+            </a>
+        </div>
+        {% else %}
+        <div class="alert alert-warning mt-4 mb-0" role="alert">
+            <strong>Note:</strong> Contact number is not available. This property has been sold.
+        </div>
+        {% endif %}
+
+        <div class="mt-4">
+            <a href="{{ url_for('search') }}" class="btn btn-outline-primary">Back to Search</a>
+            <a href="{{ url_for('predict') }}" class="btn btn-primary ms-2">Go to Prediction</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

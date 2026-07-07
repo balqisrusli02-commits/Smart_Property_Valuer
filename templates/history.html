@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card shadow-sm history-card">
+    <div class="card-body">
+        <h1 class="h4 mb-3">Prediction History</h1>
+        <p class="text-muted">Latest 100 prediction records stored in MySQL.</p>
+        <div class="table-responsive history-table-wrap">
+            <table class="table table-striped align-middle history-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Predicted Price (RM)</th>
+                        <th>User Input</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in rows %}
+                        <tr>
+                            <td>{{ row.id }}</td>
+                            <td>{{ "{:,.2f}".format(row.predicted_price) }}</td>
+                            <td>
+                                {% if row.input_display %}
+                                    <div class="history-input-list">
+                                        {% for item in row.input_display %}
+                                            <div class="history-input-item">
+                                                <span class="history-input-label">{{ item.label }}:</span>
+                                                <span class="history-input-value">{{ item.value }}</span>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    <span class="text-muted">No input details available.</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ row.created_at }}</td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="4" class="text-center text-muted py-4">
+                                No records yet. Make your first prediction to populate history.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

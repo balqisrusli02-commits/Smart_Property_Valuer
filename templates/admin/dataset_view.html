@@ -1,0 +1,91 @@
+{% extends "admin/base.html" %}
+
+{% block admin_content %}
+<div class="admin-card">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+        <div class="admin-card-title mb-0">Property Record #{{ row.id }}</div>
+        <div class="d-flex gap-2">
+            <a class="btn btn-outline-primary" href="{{ url_for('admin_dataset_edit', property_id=row.id) }}">Edit</a>
+            <form method="post" action="{{ url_for('admin_dataset_delete', property_id=row.id) }}" onsubmit="return confirm('Delete this property record?');">
+                <button type="submit" class="btn btn-outline-danger">Delete</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="mb-4">
+        <div class="meta-label mb-2">Property Image</div>
+        {% if image_url %}
+            <img src="{{ image_url }}" alt="Image for {{ row.title }}" class="dataset-detail-image">
+        {% else %}
+            <div class="dataset-image-placeholder">No image found for this property record.</div>
+        {% endif %}
+    </div>
+
+    <div class="row g-3">
+        <div class="col-md-6">
+            <div class="meta-label">Title</div>
+            <div class="meta-value">{{ row.title }}</div>
+        </div>
+        <div class="col-md-3">
+            <div class="meta-label">Location</div>
+            <div class="meta-value">{{ row.area }}</div>
+        </div>
+        <div class="col-md-3">
+            <div class="meta-label">State</div>
+            <div class="meta-value">{{ row.negeri }}</div>
+        </div>
+        <div class="col-md-3">
+            <div class="meta-label">Property Type</div>
+            <div class="meta-value">{{ property_type_options.get(row.property_type, 'Unknown') }}</div>
+        </div>
+        <div class="col-md-3">
+            <div class="meta-label">Built-up Size</div>
+            <div class="meta-value">{{ "{:,.0f}".format(row.built_up_sf) }} sqft</div>
+        </div>
+        <div class="col-md-3">
+            <div class="meta-label">Land Size</div>
+            <div class="meta-value">{{ "{:,.0f}".format(row.land_size) }} sqft</div>
+        </div>
+        <div class="col-md-3">
+            <div class="meta-label">Price</div>
+            <div class="meta-value">RM {{ "{:,.2f}".format(row.listing_price) }}</div>
+        </div>
+        <div class="col-md-2">
+            <div class="meta-label">Bedrooms</div>
+            <div class="meta-value">{{ row.bedroom }}</div>
+        </div>
+        <div class="col-md-2">
+            <div class="meta-label">Bathrooms</div>
+            <div class="meta-value">{{ row.bathroom }}</div>
+        </div>
+        <div class="col-md-2">
+            <div class="meta-label">Car Park</div>
+            <div class="meta-value">{{ row.car_park }}</div>
+        </div>
+        <div class="col-md-3">
+            <div class="meta-label">Furnishing</div>
+            <div class="meta-value">{{ furnishing_options.get(row.furnishing, 'Unknown') }}</div>
+        </div>
+        <div class="col-md-3">
+            <div class="meta-label">Tenure</div>
+            <div class="meta-value">{{ tenure_options.get(row.tenure, 'Unknown') }}</div>
+        </div>
+        <div class="col-md-3">
+            <div class="meta-label">Unit Type</div>
+            <div class="meta-value">{{ unit_type_options.get(row.unit_type, 'Unknown') }}</div>
+        </div>
+        <div class="col-md-3">
+            <div class="meta-label">Latitude</div>
+            <div class="meta-value">{{ row.latitude if row.latitude is not none else '-' }}</div>
+        </div>
+        <div class="col-md-3">
+            <div class="meta-label">Longitude</div>
+            <div class="meta-value">{{ row.longitude if row.longitude is not none else '-' }}</div>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <a href="{{ url_for('admin_dataset') }}" class="btn btn-outline-secondary">Back to Dataset Table</a>
+    </div>
+</div>
+{% endblock %}

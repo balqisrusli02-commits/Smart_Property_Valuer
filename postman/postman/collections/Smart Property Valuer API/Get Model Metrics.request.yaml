@@ -1,0 +1,5 @@
+$kind: http-request
+description: Return model performance metrics and tuned parameter values.
+url: "{{base_url}}/api/model/metrics"
+method: GET
+order: 5000
