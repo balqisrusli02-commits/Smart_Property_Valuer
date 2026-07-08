@@ -131,15 +131,15 @@ PROPERTY_SRC_DATASET_PATH = os.getenv(
 )
 HOSPITAL_DATASET_PATH = os.getenv(
     "HOSPITAL_DATASET_PATH",
-    r"c:\Users\user\Desktop\FYP\hospital_final_geo.csv",
+    os.path.join(BASE_DIR, "data", "hospital_final_geo.csv"),
 )
 SECONDARY_SCHOOL_DATASET_PATH = os.getenv(
     "SECONDARY_SCHOOL_DATASET_PATH",
-    r"c:\Users\user\Desktop\FYP\Senarai Sekolah Menengah Kementerian Pendidikan Malaysia\2022 senarai sekolah menengah    .csv",
+    os.path.join(BASE_DIR, "data", "secondary_schools.csv"),
 )
 PRIMARY_SCHOOL_DATASET_PATH = os.getenv(
     "PRIMARY_SCHOOL_DATASET_PATH",
-    r"c:\Users\user\Desktop\FYP\Senarai Sekolah Rendah Kementerian Pendidikan Malaysia\2022 senarai sekolah rendah    .csv",
+    os.path.join(BASE_DIR, "data", "primary_schools.csv"),
 )
 PROPERTY_IMAGE_DIR = os.getenv(
     "PROPERTY_IMAGE_DIR",
@@ -3523,7 +3523,13 @@ def search():
             }
         )
 
-    llm_max_matches = max(0, _safe_int(os.getenv("LLM_MAX_MATCHES_PER_SEARCH", "200"), 200))
+    # Cap LLM calls per search page to avoid Render/request timeouts (each call may take 2-15s).
+    llm_max_matches = max(0, _safe_int(os.getenv("LLM_MAX_MATCHES_PER_SEARCH", "12"), 12))
+    llm_max_matches = min(llm_max_matches, pagination["per_page"], 15)
+    llm_time_budget_seconds = max(
+        5.0, _safe_float(os.getenv("LLM_SEARCH_TIME_BUDGET_SECONDS", "20"), 20.0)
+    )
+    llm_started_at = time.time()
     search_nonce = int(time.time())
     seen_signatures = set()
     llm_error_count = 0
@@ -3532,15 +3538,26 @@ def search():
     for idx, row in enumerate(rows):
         location_context = get_location_market_context(row.get("negeri"), row.get("area"))
         use_llm = idx < llm_max_matches
-        match = generate_ai_property_match(
-            row,
-            use_llm=use_llm,
-            row_rank=idx,
-            search_nonce=search_nonce,
-            variation_seed=0,
-            location_context=location_context,
-            allow_fallback=(not use_llm),
-        )
+        if use_llm and (time.time() - llm_started_at) >= llm_time_budget_seconds:
+            use_llm = False
+        try:
+            match = generate_ai_property_match(
+                row,
+                use_llm=use_llm,
+                row_rank=idx,
+                search_nonce=search_nonce,
+                variation_seed=0,
+                location_context=location_context,
+                allow_fallback=(not use_llm),
+            )
+        except Exception as exc:
+            fallback = _generate_rule_based_property_match(row, location_context=location_context)
+            match = _build_llm_unavailable_match(
+                fallback,
+                _safe_str(row.get("area"), "Unknown area"),
+                _safe_str(row.get("negeri"), "Unknown"),
+                error_detail=_safe_str(str(exc), ""),
+            )
 
         if use_llm:
             signature = _ai_match_text_signature(match)

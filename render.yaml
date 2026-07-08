@@ -1,0 +1,36 @@
+services:
+  - type: web
+    name: smart-property-valuer
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.10.12"
+      - key: FLASK_SECRET_KEY
+        generateValue: true
+      - key: DB_HOST
+        value: lrgs.ftsm.ukm.my
+      - key: DB_PORT
+        value: "3306"
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: DB_NAME
+        value: a202336
+      - key: MODEL_PATH
+        value: models/best_model.pkl
+      - key: FEATURE_COLUMNS_PATH
+        value: models/model_columns.pkl
+      - key: LLM_MAX_MATCHES_PER_SEARCH
+        value: "12"
+      - key: LLM_SEARCH_TIME_BUDGET_SECONDS
+        value: "20"
+      - key: HOSPITAL_DATASET_PATH
+        value: data/hospital_final_geo.csv
+      - key: PRIMARY_SCHOOL_DATASET_PATH
+        value: data/primary_schools.csv
+      - key: SECONDARY_SCHOOL_DATASET_PATH
+        value: data/secondary_schools.csv
